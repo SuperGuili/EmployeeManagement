@@ -3,6 +3,7 @@ using EmployeeManagement.ViewModels;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -16,11 +17,15 @@ namespace EmployeeManagement.Controllers
     {
         private readonly IEmployeeRepository _employeeRepository;
         private readonly IHostingEnvironment hostingEnvironment;
+        private readonly ILogger logger;
 
-        public HomeController(IEmployeeRepository employeeRepository, IHostingEnvironment hostingEnvironment)
+        public HomeController(IEmployeeRepository employeeRepository,
+                                IHostingEnvironment hostingEnvironment,
+                                ILogger<HomeController> logger)
         {
             _employeeRepository = employeeRepository;
             this.hostingEnvironment = hostingEnvironment;
+            this.logger = logger;
         }
 
         public ViewResult Index()
@@ -31,8 +36,17 @@ namespace EmployeeManagement.Controllers
 
         public ViewResult Details(int? id)
         {
+            //throw new Exception("Error on Details View");
+
+            logger.LogTrace("Trace log");
+            logger.LogDebug("debug log");
+            logger.LogInformation("Information Log");
+            logger.LogWarning("Warnign log");
+            logger.LogError("Error log");
+            logger.LogCritical("Critical log");
+
             Employee employee = _employeeRepository.GetEmployee(id.Value);
-            if(employee == null)
+            if (employee == null)
             {
                 Response.StatusCode = 404;
                 return View("EmployeeNotFound", id.Value);
@@ -98,10 +112,10 @@ namespace EmployeeManagement.Controllers
                 employee.Name = model.Name;
                 employee.Email = model.Email;
                 employee.Department = model.Department;
-                
+
                 if (model.Photo != null)
                 {
-                    if(model.ExistingPhotoPath != null)
+                    if (model.ExistingPhotoPath != null)
                     {
                         string filePath = Path.Combine(hostingEnvironment.WebRootPath, "images", model.ExistingPhotoPath);
                         System.IO.File.Delete(filePath);
@@ -127,7 +141,7 @@ namespace EmployeeManagement.Controllers
                 using (var filestream = new FileStream(filePath, FileMode.Create))
                 {
                     model.Photo.CopyTo(filestream);
-                }                
+                }
             }
 
             return uniqueFileName;
