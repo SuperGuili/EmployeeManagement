@@ -3,11 +3,13 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using EmployeeManagement.Models;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Authorization;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -32,10 +34,29 @@ namespace EmployeeManagement
             options.UseSqlServer(_config.GetConnectionString("EmployeeDbConnection")));
 
 
-            services.AddMvc(options => options.EnableEndpointRouting = false).AddXmlSerializerFormatters();
+            services.AddMvc(options => {
+                options.EnableEndpointRouting = false;
+
+                var policy = new AuthorizationPolicyBuilder()
+                                .RequireAuthenticatedUser()
+                                .Build();
+
+                options.Filters.Add(new AuthorizeFilter(policy));
+
+                }).AddXmlSerializerFormatters();
+
             services.AddScoped<IEmployeeRepository, SQLEmployeeRepository>();
 
-            services.AddIdentity<IdentityUser, IdentityRole>().AddEntityFrameworkStores<AppDbContext>();
+            services.AddIdentity<IdentityUser, IdentityRole>(options =>
+            {
+                options.Password.RequiredLength = 3;
+                options.Password.RequiredUniqueChars = 0;
+                options.Password.RequireDigit = false;
+                options.Password.RequireNonAlphanumeric = false;
+                options.Password.RequireUppercase = false;
+                options.Password.RequireLowercase = false;
+
+            }).AddEntityFrameworkStores<AppDbContext>();            
         }
 
 
