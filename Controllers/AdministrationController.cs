@@ -14,7 +14,7 @@ namespace EmployeeManagement.Controllers
         private readonly RoleManager<IdentityRole> roleManager;
         private readonly UserManager<ApplicationUser> userManager;
 
-        public AdministrationController(RoleManager<IdentityRole> roleManager, 
+        public AdministrationController(RoleManager<IdentityRole> roleManager,
                                          UserManager<ApplicationUser> userManager)
         {
             this.roleManager = roleManager;
@@ -42,7 +42,7 @@ namespace EmployeeManagement.Controllers
                 {
                     return RedirectToAction("listRoles", "Administration");
                 }
-                foreach(IdentityError error in result.Errors)
+                foreach (IdentityError error in result.Errors)
                 {
                     ModelState.AddModelError("", error.Description);
                 }
@@ -62,7 +62,7 @@ namespace EmployeeManagement.Controllers
         {
             var role = await roleManager.FindByIdAsync(id);
 
-            if(role == null)
+            if (role == null)
             {
                 ViewBag.ErrorMessage = $"The role with the id: {id} cannot be found";
                 return View("NotFound");
@@ -74,7 +74,7 @@ namespace EmployeeManagement.Controllers
                 RoleName = role.Name
             };
 
-            foreach(var user in userManager.Users)
+            foreach (var user in userManager.Users)
             {
                 if (await userManager.IsInRoleAsync(user, role.Name))
                 {
@@ -112,6 +112,84 @@ namespace EmployeeManagement.Controllers
             }
         }
 
+        [HttpGet]
+        public async Task<IActionResult> EditUsersInRole(string roleId)
+        {
+            ViewBag.roleId = roleId;
 
+            var role = await roleManager.FindByIdAsync(roleId);
+
+            if (role == null)
+            {
+                ViewBag.ErrorMessage = $"The role with id = {roleId} cannot be found.";
+                return View("NotFound");
+            }
+
+            var model = new List<UserRoleViewModel>();
+
+            foreach (var user in userManager.Users)
+            {
+                var userRoleViewModel = new UserRoleViewModel
+                {
+                    UserId = user.Id,
+                    UserName = user.UserName
+                };
+                if (await userManager.IsInRoleAsync(user, role.Name))
+                {
+                    userRoleViewModel.IsSelected = true;
+                }
+                else
+                {
+                    userRoleViewModel.IsSelected = false;
+                }
+
+                model.Add(userRoleViewModel);
+            }
+            return View(model);
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> EditUsersInRole(List<UserRoleViewModel> model, string roleId)
+        {
+            var role = await roleManager.FindByIdAsync(roleId);
+
+            if (role == null)
+            {
+                ViewBag.ErrorMessage = $"The role with id = {roleId} cannot be found.";
+                return View("NotFound");
+            }
+
+            for (int i = 0; i < model.Count; i++)
+            {
+                var user = await userManager.FindByIdAsync(model[i].UserId);
+
+                IdentityResult result = null;
+
+                if (model[i].IsSelected && !(await userManager.IsInRoleAsync(user, role.Name)))
+                {
+                    result = await userManager.AddToRoleAsync(user, role.Name);
+                }
+                else if (!model[i].IsSelected && await userManager.IsInRoleAsync(user, role.Name))
+                {
+                    result = await userManager.RemoveFromRoleAsync(user, role.Name);
+                }
+                else
+                {
+                    continue;
+                }
+                if (result.Succeeded)
+                {
+                    if(i < model.Count - 1)
+                    {
+                        continue;
+                    }
+                    else
+                    {
+                        return RedirectToAction("EditRole", new { Id = roleId});
+                    }
+                }
+            }
+            return RedirectToAction("EditRole", new { Id = roleId });
+        }
     }
 }

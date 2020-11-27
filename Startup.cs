@@ -43,7 +43,8 @@ namespace EmployeeManagement
 
                 options.Filters.Add(new AuthorizeFilter(policy));
 
-                }).AddXmlSerializerFormatters();
+                }).AddXmlSerializerFormatters()
+                  .AddRazorRuntimeCompilation();
 
             services.AddScoped<IEmployeeRepository, SQLEmployeeRepository>();
 
