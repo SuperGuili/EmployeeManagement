@@ -61,7 +61,8 @@
             }
         </div>
         <div class="card-footer">
-            <a class="btn btn-primary" style="width:auto">Manage Roles</a>
+            <a asp-action="ManageUserRoles" asp-controller="Administration" asp-route-userId="@Model.Id"
+               class="btn btn-primary" style="width:auto">Manage Roles</a>
         </div>
     </div>
 
@@ -83,7 +84,8 @@
             }
         </div>
         <div class="card-footer">
-            <a class="btn btn-primary" style="width:auto">Manage Claims</a>
+            <a asp-action="ManageUserClaims" asp-route-userId="@Model.Id" 
+               class="btn btn-primary" style="width:auto">Manage Claims</a>
         </div>
     </div>
 
