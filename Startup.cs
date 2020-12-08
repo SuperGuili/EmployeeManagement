@@ -30,11 +30,12 @@ namespace EmployeeManagement
         // For more information on how to configure your application, visit https://go.microsoft.com/fwlink/?LinkID=398940
         public void ConfigureServices(IServiceCollection services)
         {
-            services.AddDbContextPool<AppDbContext>(options => 
+            services.AddDbContextPool<AppDbContext>(options =>
             options.UseSqlServer(_config.GetConnectionString("EmployeeDbConnection")));
 
 
-            services.AddMvc(options => {
+            services.AddMvc(options =>
+            {
                 options.EnableEndpointRouting = false;
 
                 var policy = new AuthorizationPolicyBuilder()
@@ -43,8 +44,27 @@ namespace EmployeeManagement
 
                 options.Filters.Add(new AuthorizeFilter(policy));
 
-                }).AddXmlSerializerFormatters()
+            }).AddXmlSerializerFormatters()
                   .AddRazorRuntimeCompilation();
+
+            services.ConfigureApplicationCookie( options => 
+            {
+                options.AccessDeniedPath = new PathString("/Administration/AccessDenied");
+            });
+
+            //Claims Policy
+            services.AddAuthorization(options =>
+            {   
+                options.AddPolicy("DeleteRolePolicy",
+                policy => policy.RequireClaim("Delete Role"));
+
+                options.AddPolicy("EditRolePolicy",
+                policy => policy.RequireClaim("Edit Role"));
+
+                //Roles Policy
+                options.AddPolicy("AdminRolePolicy",
+                policy => policy.RequireRole("Admin"));
+            });          
 
             services.AddScoped<IEmployeeRepository, SQLEmployeeRepository>();
 
@@ -57,7 +77,7 @@ namespace EmployeeManagement
                 options.Password.RequireUppercase = false;
                 options.Password.RequireLowercase = false;
 
-            }).AddEntityFrameworkStores<AppDbContext>();            
+            }).AddEntityFrameworkStores<AppDbContext>();
         }
 
 
