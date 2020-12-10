@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using EmployeeManagement.Models;
+using EmployeeManagement.Security;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
@@ -47,26 +48,40 @@ namespace EmployeeManagement
             }).AddXmlSerializerFormatters()
                   .AddRazorRuntimeCompilation();
 
-            services.ConfigureApplicationCookie( options => 
-            {
-                options.AccessDeniedPath = new PathString("/Administration/AccessDenied");
-            });
+            services.ConfigureApplicationCookie(options =>
+           {
+               options.AccessDeniedPath = new PathString("/Administration/AccessDenied");
+           });
 
             //Claims Policy
             services.AddAuthorization(options =>
-            {   
+            {
                 options.AddPolicy("DeleteRolePolicy",
-                policy => policy.RequireClaim("Delete Role"));
+                policy => policy.RequireClaim("Delete Role", "true"));
+
+                //options.AddPolicy("EditRolePolicy",
+                //policy => policy.RequireClaim("Edit Role", "true"));
+
+                //options.AddPolicy("EditRolePolicy",
+                //    policy => policy.RequireAssertion(
+                //        context => context.User.IsInRole("Admin") &&
+                //        context.User.HasClaim(claim => claim.Type == "Edit Role" && claim.Value == "true") ||
+                //        context.User.IsInRole("Super Admin")
+                //        ));
 
                 options.AddPolicy("EditRolePolicy",
-                policy => policy.RequireClaim("Edit Role"));
+                    policy => policy.AddRequirements(new ManageAdminRolesAndClaimsRequirement())
+                    );
 
                 //Roles Policy
                 options.AddPolicy("AdminRolePolicy",
                 policy => policy.RequireRole("Admin"));
-            });          
+            });
 
             services.AddScoped<IEmployeeRepository, SQLEmployeeRepository>();
+
+            services.AddSingleton<IAuthorizationHandler, CanEditOnlyOtherAdminRolesAndClaimsHandler>();
+            services.AddSingleton<IAuthorizationHandler, SuperAdminHandler>();
 
             services.AddIdentity<ApplicationUser, IdentityRole>(options =>
             {
