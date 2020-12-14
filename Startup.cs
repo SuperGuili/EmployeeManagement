@@ -46,7 +46,13 @@ namespace EmployeeManagement
                 options.Filters.Add(new AuthorizeFilter(policy));
 
             }).AddXmlSerializerFormatters()
-                  .AddRazorRuntimeCompilation();
+              .AddRazorRuntimeCompilation();
+
+            services.AddAuthentication().AddGoogle(options =>
+            {
+                options.ClientId = "122886919018-42ca5hglmvhkahp5c19t4h8f33vi2lsm.apps.googleusercontent.com";
+                options.ClientSecret = "6l_Jh5coGGeNGDqHSDTaLdiM";
+            });
 
             services.ConfigureApplicationCookie(options =>
            {
@@ -72,6 +78,7 @@ namespace EmployeeManagement
                 options.AddPolicy("EditRolePolicy",
                     policy => policy.AddRequirements(new ManageAdminRolesAndClaimsRequirement())
                     );
+                //options.InvokeHandlersAfterFailure = false;
 
                 //Roles Policy
                 options.AddPolicy("AdminRolePolicy",

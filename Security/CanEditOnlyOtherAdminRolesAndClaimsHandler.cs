@@ -19,7 +19,7 @@ namespace EmployeeManagement.Security
                 return Task.CompletedTask;
             }
 
-            string loggedInAdminId = 
+            string loggedInAdminId =
                 context.User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier).Value;
 
             string adminBeingEdited =
@@ -31,7 +31,7 @@ namespace EmployeeManagement.Security
             {
                 context.Succeed(requirement);
             }
-
+            
             return Task.CompletedTask;
         }
     }
